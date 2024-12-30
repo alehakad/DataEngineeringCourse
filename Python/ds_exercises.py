@@ -56,3 +56,49 @@ def rotate_left(list_to_rotate: list[Any], n_rotations: int) -> list[Any]:
 #### Tests
 assert rotate_left([1, 2, 3, 4, 5, 6], 0) == [1, 2, 3, 4, 5, 6]
 assert rotate_left([1, 2, 3, 4, 5, 6], 4) == [5, 6, 1, 2, 3, 4]
+
+
+# Function that removes and prints every second number from list until it becomes empty
+def print_even_elements(list_to_print: list[int]) -> None:
+    temp_list = []
+    while len(list_to_print) >= 2:
+        for i in range(len(list_to_print)):
+            if i % 2 == 1:
+                print(list_to_print[i])
+            else:
+                temp_list.append(list_to_print[i])
+
+        list_to_print = temp_list
+        temp_list = []
+
+
+#### Tests
+print_even_elements(list(range(10)))
+
+
+# Function to convert dictionary ot list of tuples
+def convert_dict_to_tuples_list(given_dict: dict[Any, Any]) -> list[tuple[Any, Any]]:
+    return list(given_dict.items())
+
+
+#### Tests
+assert convert_dict_to_tuples_list({1: 2, 3: 4, 5: 4}) == [(1, 2), (3, 4), (5, 4)]
+
+
+# Function to find max and min values in dict and print keys
+def find_max_min_values_keys(given_dict: dict[int, int]) -> None:
+    max_key, min_key = None, None
+    max_val, min_val = float('-inf'), float('inf')
+    for key, val in given_dict.items():
+        if val > max_val:
+            max_val = val
+            max_key = key
+        if val < min_val:
+            min_val = val
+            min_key = key
+
+    print(min_key, max_key)
+
+
+#### Tests
+find_max_min_values_keys({1: 2, 3: 4, 5: 6, -1: -10})
