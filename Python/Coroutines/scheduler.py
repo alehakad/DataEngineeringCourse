@@ -2,35 +2,28 @@ from typing import Callable, Generator, Any
 from datetime import datetime, timedelta
 from priority_queue import PriorityQueue
 import time
+from types import GeneratorType
 
 
 class Scheduler:
-
-    class Sleep:
-        """delay for task"""
-
-        def __init__(self, seconds_to_sleep: int):
-            self.seconds_to_sleep = seconds_to_sleep
-
-        def __await__(self) -> Generator[None, None, None]:
-            start = time.time()
-            while time.time() - start < self.seconds_to_sleep:
-                yield
-            return
+    """
+    class for scheduler of tasks:
+    - tasks are chosen by earliest start time
+    - tasks yield the time of next pause
+    - if False is yielded, task is stopped
+    """
 
     class SchedulerTask:
-        def __init__(self, func, timepoint, *args, **kwargs):
-            self.func = func
+        def __init__(self, gen_object, timepoint):
+            self.gen_object = gen_object
             self.timepoint = timepoint
-            self.args = args
-            self.kwargs = kwargs
 
         def __lt__(self, other: "Scheduler.SchedulerTask") -> bool:
             return self.timepoint < other.timepoint
 
         def __call__(self):
             try:
-                return next(self.func(*self.args, **self.kwargs))
+                return next(self.gen_object)
             except StopIteration:
                 return False
 
@@ -38,8 +31,23 @@ class Scheduler:
         self.task_queue = PriorityQueue()
         self.immediate_tasks_queue = []
 
-    def add(self, task: Callable[..., Any], timepoint: datetime, *args, **kwargs):
-        self.task_queue.push(Scheduler.SchedulerTask(task, timepoint, *args, **kwargs))
+    def add(
+        self,
+        task: Callable[..., Any] | Generator[Any, Any, Any],
+        timepoint: datetime,
+        *args,
+        **kwargs
+    ):
+        if isinstance(task, GeneratorType):
+            gen_object = task
+        else:
+
+            def function_wrapper():
+                yield task(*args, **kwargs)
+
+            gen_object = function_wrapper()
+
+        self.task_queue.push(Scheduler.SchedulerTask(gen_object, timepoint))
 
     def run(self):
         while not (self.task_queue.is_empty() and len(self.immediate_tasks_queue) == 0):
