@@ -12,10 +12,25 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data:/data/db
+
   fetcher:
     build: ./fetcher
     depends_on:
       rabbitmq:
         condition: service_healthy
+      #mongodb: {}
     environment:
       - RABBITMQ_HOST=rabbitmq
+volumes:
+  mongodb_data:

@@ -22,7 +22,10 @@ def count_char_occurrences2(string: str, char: str) -> int:
 
 
 #### Tests
-print(count_char_occurrences2("blablabla a", "a") == count_char_occurrences("blablabla a", "a"))
+print(
+    count_char_occurrences2("blablabla a", "a")
+    == count_char_occurrences("blablabla a", "a")
+)
 print(count_char_occurrences2("abcdefg", "z") == count_char_occurrences("abcdefg", "z"))
 print(count_char_occurrences2("123 b a", "3") == count_char_occurrences("123 b a", "3"))
 
@@ -35,10 +38,10 @@ def flip_number(num: int | float) -> float:
 
 
 #### Tests
-assert (flip_number(1234) == 4321)
-assert (flip_number(0) == 0)
-assert (flip_number(1.2) == 2.1)
-assert (flip_number(-34) == -43)
+assert flip_number(1234) == 4321
+assert flip_number(0) == 0
+assert flip_number(1.2) == 2.1
+assert flip_number(-34) == -43
 
 
 ### Celsius to Fahrenheit
@@ -47,9 +50,9 @@ def convert_celsius_to_fahrenheit(temperature: float) -> float:
 
 
 #### Tests
-assert (convert_celsius_to_fahrenheit(233) == 451.4)
-assert (convert_celsius_to_fahrenheit(-100) == -148)
-assert (convert_celsius_to_fahrenheit(0) == 32)
+assert convert_celsius_to_fahrenheit(233) == 451.4
+assert convert_celsius_to_fahrenheit(-100) == -148
+assert convert_celsius_to_fahrenheit(0) == 32
 
 
 #### Leap year checking function
@@ -58,10 +61,10 @@ def is_leap_year(year: int) -> bool:
 
 
 #### Tests
-assert (is_leap_year(2024))
-assert (not is_leap_year(2023))
-assert (not is_leap_year(300))
-assert (is_leap_year(1600))
+assert is_leap_year(2024)
+assert not is_leap_year(2023)
+assert not is_leap_year(300)
+assert is_leap_year(1600)
 
 
 ### Check password complexity:
@@ -70,10 +73,22 @@ assert (is_leap_year(1600))
 # - numbers from 0 to 9
 # - contains at least one @, #, %, &
 
+
+class PasswordValidationException(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(f"{message}")
+
+
 def check_password(password: str) -> bool:
     if len(password) < 8:
         return False
-    contains_num, contains_cap_letter, contains_low_letter, contains_special_char = False, False, False, False
+    contains_num, contains_cap_letter, contains_low_letter, contains_special_char = (
+        False,
+        False,
+        False,
+        False,
+    )
     for c in password:
         if c.isalpha():
             if c.isupper():
@@ -82,21 +97,32 @@ def check_password(password: str) -> bool:
                 contains_low_letter = True
         elif c.isdigit():
             contains_num = True
-        elif c in {'@', '#', '%', '&'}:
+        elif c in {"@", "#", "%", "&"}:
             contains_special_char = True
+    if not contains_num:
+        raise PasswordValidationException("No numbers")
+    if not contains_cap_letter:
+        raise PasswordValidationException("No cap letters")
+    if not contains_low_letter:
+        raise PasswordValidationException("No low letters")
+    if not contains_special_char:
+        raise PasswordValidationException("No special chars")
 
-    return contains_num and contains_cap_letter and contains_low_letter and contains_special_char
+    return True
 
 
 #### Tests
-assert not check_password("123BlaBla")
+try:
+    check_password("123BlaBla")
+except PasswordValidationException as e:
+    print(e, "Password is not valid")
 assert check_password("123@BlaBla")
 
 
 # Function to return sum of number divisors
 def count_divisors_sum(number: int) -> int:
     total_sum = 0
-    for i in range(1, int(number ** 0.5) + 1):
+    for i in range(1, int(number**0.5) + 1):
         if number % i == 0:
             total_sum += i
             if i != number // i:
@@ -118,7 +144,7 @@ assert count_divisors_sum(28) == 56
 def split_money(amount: int) -> dict[int, int]:
     amounts = [1, 2, 5, 10, 20, 50, 100, 200]
     res_amounts_map = {b: 0 for b in amounts}
-    dp_res = [(float('inf'), []) for _ in range(amount + 1)]
+    dp_res = [(float("inf"), []) for _ in range(amount + 1)]
     dp_res[0] = (0, [])
     for b in amounts:
         dp_res[b] = (1, [b])
@@ -140,8 +166,9 @@ assert split_money(234) == {200: 1, 100: 0, 50: 0, 20: 1, 10: 1, 5: 0, 2: 2, 1: 
 
 # Function that checks that the number is prime
 def is_prime_number(number: int) -> bool:
-    if number == 1: return False
-    for i in range(2, int(number ** 0.5) + 1):
+    if number == 1:
+        return False
+    for i in range(2, int(number**0.5) + 1):
         if number % i == 0:
             return False
     return True
