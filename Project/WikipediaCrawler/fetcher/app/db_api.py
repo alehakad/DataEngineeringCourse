@@ -26,12 +26,12 @@ class MongoConnector:
             print(f"Failed to connect to MongoDB: {e}")
             raise
 
-    def save_url_to_db(self, url):
+    def save_url_to_db(self, url, page_file_path, last_modified_date):
         """
         Saves the fetched url to a MongoDB database.
         """
         collection = self.db[self.url_collection_name]
-        document = {"url": url}
+        document = {"url": url, "htmlPath": page_file_path, "last_modified": last_modified_date}
         result = collection.insert_one(document)
         logger.debug(f"Inserted URL with ID: {result.inserted_id}")
 
