@@ -13,8 +13,6 @@ from queue_api import QueueConnector
 
 class Fetcher:
     start_url = "https://en.wikipedia.org/wiki/Main_Page"
-    in_queue = "valid_links"
-    out_queue = "to_check_links"
     html_storage_path = "/app/html_pages"
 
     def __init__(self):
@@ -24,7 +22,7 @@ class Fetcher:
         os.makedirs(Fetcher.html_storage_path, exist_ok=True)
         # TODO: add argument to add only from one container
         # seed first url
-        self.queue_connector.publish(Fetcher.start_url, Fetcher.in_queue)
+        self.queue_connector.publish(Fetcher.start_url, os.getenv("IN_QUEUE"))
         logger.info(f"Published start url")
 
     @staticmethod
@@ -97,7 +95,7 @@ class Fetcher:
         links = self.find_html_links(html_soup)
         # add to next message queues
         for link in links:
-            self.queue_connector.publish(link, Fetcher.out_queue)
+            self.queue_connector.publish(link, os.getenv("OUT_QUEUE"))
 
     @staticmethod
     def find_html_links(html_soup) -> List[str]:
@@ -115,7 +113,7 @@ class Fetcher:
         """
         Starts the queue consumption.
         """
-        self.queue_connector.consume(Fetcher.in_queue, self.process_message)
+        self.queue_connector.consume(os.getenv("IN_QUEUE"), self.process_message)
 
     def close(self):
         """
