@@ -13,7 +13,7 @@ class Fetcher:
     start_url = "https://en.wikipedia.org/wiki/Main_Page"
     in_queue = "valid_links"
     out_queue = "to_check_links"
-    html_storage_path = "./html_storage"
+    html_storage_path = "/app/html_pages"
 
     def __init__(self):
         logger.info(f"Connect to queue")
@@ -46,7 +46,7 @@ class Fetcher:
 
         with open(file_path, "w", encoding="utf-8") as file:
             file.write(html_content)
-
+        logger.info(f"Page {url} saved to local storage")
         return file_path
 
     def process_message(self, channel, method, properties, body):
