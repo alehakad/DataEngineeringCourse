@@ -1,3 +1,4 @@
+import os
 from typing import Callable
 
 import pika
@@ -12,17 +13,12 @@ class QueueConnector:
     and publish messages to a queue.
     """
 
-    def __init__(
-            self,
-            host: str = "localhost",
-            username="user",
-            password="password"
-    ):
+    def __init__(self):
         """
         Initializes a connection to RabbitMQ using the provided connection parameters.
         """
-        self.host = host
-        credentials = pika.PlainCredentials(username, password)
+        self.host = os.getenv("RABBITMQ_HOST")
+        credentials = pika.PlainCredentials(os.getenv("RABBITMQ_DEFAULT_USER"), os.getenv("RABBITMQ_DEFAULT_PASS"))
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host=self.host, credentials=credentials),
         )

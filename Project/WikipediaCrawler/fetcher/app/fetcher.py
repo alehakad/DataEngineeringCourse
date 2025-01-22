@@ -17,7 +17,7 @@ class Fetcher:
 
     def __init__(self):
         logger.info(f"Connect to queue")
-        self.queue_connector = QueueConnector(host="rabbitmq")
+        self.queue_connector = QueueConnector()
         self.mongo_connector = MongoConnector()
         os.makedirs(Fetcher.html_storage_path, exist_ok=True)
         # TODO: add argument to add only from one container
