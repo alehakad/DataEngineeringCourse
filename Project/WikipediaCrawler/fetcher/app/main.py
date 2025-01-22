@@ -1,7 +1,7 @@
 import os
-import re
 from datetime import datetime
 from typing import List
+from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
@@ -32,9 +32,9 @@ class Fetcher:
         """
         response = requests.get(url)
         if response.status_code == 200:
-            return response.text
+            return response.text, response.headers
         else:
-            return None
+            return None, None
 
     @staticmethod
     def save_html_to_local(url, html_content):
@@ -50,23 +50,20 @@ class Fetcher:
         return file_path
 
     @staticmethod
-    def find_last_modified_date(html_soup):
-        footer_info = html_soup.find("li", id="footer-info-lastmod")
-        if footer_info:
-            text = footer_info.get_text(strip=True)
-            date_pattern = r"\d{1,2} \w+ \d{4}"
-            match = re.search(date_pattern, text)
+    def find_last_modified_date(html_headers):
+        """
+        Finds the last modified date from the HTTP headers of the given URL.
+        """
+        if 'Last-Modified' in html_headers:
+            last_modified_str = html_headers['Last-Modified']
+            try:
+                # Parse the Last-Modified header
+                return datetime.strptime(last_modified_str, "%a, %d %b %Y %H:%M:%S %Z")
+            except ValueError as e:
+                logger.error(f"Error parsing Last-Modified header: {e}")
+        else:
+            logger.warning("Last-Modified header not found in the response.")
 
-            if match:
-                date_str = match.group(0)
-                try:
-                    # Convert the extracted date string into a datetime object
-                    last_modified_date = datetime.strptime(date_str, "%d %B %Y")
-                    return last_modified_date
-                except ValueError as e:
-                    logger.error(f"Error parsing date: {e}")
-
-        logger.error("Element with id 'footer-info-lastmod' not found.")
         return None
 
     def process_message(self, channel, method, properties, body):
@@ -75,38 +72,37 @@ class Fetcher:
         extracting links from the HTML content, and publishing them to the out_queue.
         """
         url = body.decode()
-        logger.info(f"Fetching HTML from {url}")
+        logger.debug(f"Fetching HTML from {url}")
 
         if not url:
             return
 
-        html_content = self.fetch_html(url)
+        html_content, html_headers = self.fetch_html(url)
         if not html_content:
             logger.error(f"Failed to fetch HTML from {url}")
             return
         # save html to localhost
         page_file_path = self.save_html_to_local(url, html_content)
 
-        html_soup = BeautifulSoup(html_content, "html.parser")
-        last_modified_date = self.find_last_modified_date(html_soup)
+        last_modified_date = self.find_last_modified_date(html_headers)
         # add url with metadata to mongo
         self.mongo_connector.save_url_to_db(url, page_file_path, last_modified_date)
         # find links
-        links = self.find_html_links(html_soup)
+        links = self.find_html_links(url, html_content)
         # add to next message queues
         for link in links:
             self.queue_connector.publish(link, os.getenv("OUT_QUEUE"))
 
     @staticmethod
-    def find_html_links(html_soup) -> List[str]:
+    def find_html_links(start_url, html_content) -> List[str]:
         """
         Extracts all the hyperlinks from the HTML content.
         """
-
+        html_soup = BeautifulSoup(html_content, "html.parser")
         links = set()
         for a_tag in html_soup.find_all("a", href=True):
             href = a_tag['href']
-            links.add(href)
+            links.add(urljoin(start_url, href))
         return list(links)
 
     def start(self):

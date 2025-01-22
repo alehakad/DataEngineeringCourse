@@ -42,17 +42,17 @@ class Parser:
         Processes links adds valid ones to filter queue.
         """
         url = body.decode()
-        logger.info(f"Checking with link for {url}")
+        logger.debug(f"Checking with link for {url}")
         normalized_link = self.parse_wikipedia_link(url)
         if normalized_link:
-            logger.info(f"Added link {normalized_link} to filter queue")
+            logger.debug(f"Added link {normalized_link} to filter queue")
             self.queue_connector.publish(normalized_link, os.getenv("OUT_QUEUE"))
 
     def start(self):
         """
         Starts the queue consumption.
         """
-        logger.info("Start parser")
+        logger.debug("Start parser")
         self.queue_connector.consume(os.getenv("IN_QUEUE"), self.process_message)
 
 

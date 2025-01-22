@@ -47,6 +47,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    restart: on-failure
 
   fetcher:
     build: ./fetcher
@@ -64,6 +65,7 @@ services:
       - OUT_QUEUE=${PARSER_QUEUE}
     volumes:
       - ./html_pages:/app/html_pages
+    restart: on-failure
   parser:
     build: ./parser
     depends_on:
@@ -75,6 +77,8 @@ services:
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
       - IN_QUEUE=${PARSER_QUEUE}
       - OUT_QUEUE=${FILTER_QUEUE}
+    restart: on-failure
+
   filter:
     build: ./filter
     depends_on:
@@ -88,6 +92,8 @@ services:
       - OUT_QUEUE=${FETCHER_QUEUE}
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
+    restart: on-failure
+
 volumes:
   mongodb_data:
   rabbitmq_data:

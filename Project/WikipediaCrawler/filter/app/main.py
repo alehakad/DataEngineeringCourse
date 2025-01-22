@@ -22,9 +22,9 @@ class Filter:
         Processes links adds valid ones to fetcher queue.
         """
         url = body.decode()
-        logger.info(f"Checking duplicate url for {url}")
+        logger.debug(f"Checking duplicate url for {url}")
         if not self.check_duplicate(url):
-            logger.info(f"Added link {url} to fetcher queue")
+            logger.debug(f"Added link {url} to fetcher queue")
             self.queue_connector.publish(url, os.getenv("OUT_QUEUE"))
 
     def start(self):

@@ -50,4 +50,4 @@ class QueueConnector:
             body=message,
             properties=pika.BasicProperties(delivery_mode=2)  # to ensure message persist
         )
-        logger.info(f"Message sent to queue {queue_name}: {message}")
+        logger.debug(f"Message sent to queue {queue_name}: {message}")

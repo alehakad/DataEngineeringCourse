@@ -20,9 +20,9 @@ class RedisURLHandler:
         Check if a URL exists in a Redis set, and add it if it doesn't.
         """
         if self.redis_client.sismember(RedisURLHandler.url_set_name, url):
-            logger.info(f"URL already exists in the set: {url}")
+            logger.debug(f"URL already exists in the set: {url}")
             return False
         else:
             self.redis_client.sadd(RedisURLHandler.url_set_name, url)
-            logger.info(f"URL added to the set: {url}")
+            logger.debug(f"URL added to the set: {url}")
             return True
