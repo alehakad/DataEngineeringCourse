@@ -4,6 +4,7 @@ from typing import List
 import requests
 from bs4 import BeautifulSoup
 
+from db_api import MongoConnector
 from logger_config import logger
 from queue_api import QueueConnector
 
@@ -17,9 +18,10 @@ class Fetcher:
     def __init__(self):
         logger.info(f"Connect to queue")
         self.queue_connector = QueueConnector(host="rabbitmq")
+        self.mongo_connector = MongoConnector()
         os.makedirs(Fetcher.html_storage_path, exist_ok=True)
-
         # TODO: add argument to add only from one container
+        # seed first url
         self.queue_connector.publish(Fetcher.start_url, Fetcher.in_queue)
         logger.info(f"Published start url")
 
@@ -54,6 +56,7 @@ class Fetcher:
         """
         url = body.decode()
         logger.info(f"Fetching HTML from {url}")
+
         if not url:
             return
 
@@ -63,9 +66,12 @@ class Fetcher:
             return
         # save html to localhost
         self.save_html_to_local(url, html_content)
+        # add url with metadata to mongo
+        # TODO: add metadata and filepath
+        self.mongo_connector.save_url_to_db(url)
         # find links
         links = self.find_html_links(html_content)
-        # add to next message queue
+        # add to next message queues
         for link in links:
             self.queue_connector.publish(link, Fetcher.out_queue)
 
@@ -87,7 +93,19 @@ class Fetcher:
         """
         self.queue_connector.consume(Fetcher.in_queue, self.process_message)
 
+    def close(self):
+        """
+        Clean up resources
+        """
+        logger.info("Closing resources...")
+        self.mongo_connector.close()
+
 
 if __name__ == "__main__":
     fetcher = Fetcher()
-    fetcher.start()
+    try:
+        fetcher.start()
+    except KeyboardInterrupt:
+        logger.info("Interrupted. Shutting down")
+    finally:
+        fetcher.close()
