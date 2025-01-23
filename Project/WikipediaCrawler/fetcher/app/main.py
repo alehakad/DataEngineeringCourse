@@ -109,6 +109,7 @@ class Fetcher:
         """
         Starts the queue consumption.
         """
+        logger.info("Starting new fetcher")
         self.queue_connector.consume(os.getenv("IN_QUEUE"), self.process_message)
 
     def close(self):

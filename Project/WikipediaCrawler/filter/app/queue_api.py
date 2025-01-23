@@ -36,7 +36,7 @@ class QueueConnector:
             on_message_callback=process_message_callback,
             auto_ack=True,
         )
-        logger.debug("Waiting for messages. To exit press CTRL+C")
+        logger.info("Waiting for messages. To exit press CTRL+C")
         self.channel.start_consuming()
 
     def publish(self, message: str | bytes, queue_name: str):

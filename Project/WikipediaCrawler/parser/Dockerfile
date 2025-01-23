@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy the requirements file from the main folder to the container
 COPY requirements.txt /app/requirements.txt
 
+# Disable output buffering
+ENV PYTHONUNBUFFERED=1
+
 # Install the Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
