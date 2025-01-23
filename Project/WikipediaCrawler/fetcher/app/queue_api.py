@@ -24,17 +24,27 @@ class QueueConnector:
         )
         self.channel = self.connection.channel()
 
-    def consume(self, queue_name: str, process_message_callback: Callable):
+    def consume(self, queue_name: str, process_message_callback: Callable, dead_letter_queue: str | None = None):
         """
         Starts consuming messages from the specified queue and processes them
         using the provided callback function.
         """
-        self.channel.queue_declare(queue=queue_name, durable=True)
-
+        if not dead_letter_queue:
+            self.channel.queue_declare(queue=queue_name, durable=True)
+        else:
+            # set up dead letter queue to retry failed messages
+            self.channel.queue_declare(queue=queue_name, durable=True,
+                                       arguments={'x-dead-letter-exchange': '',
+                                                  'x-dead-letter-routing-key': dead_letter_queue,
+                                                  })
+            # declare dead message queue to send back to urls queue
+            self.channel.queue_declare(queue=dead_letter_queue, durable=True, arguments={'x-message-ttl': 5000,
+                                                                                         'x-dead-letter-exchange': '',
+                                                                                         'x-dead-letter-routing-key': queue_name})
         self.channel.basic_consume(
             queue=queue_name,
             on_message_callback=process_message_callback,
-            auto_ack=True,
+            auto_ack=False,
         )
         logger.debug("Waiting for messages. To exit press CTRL+C")
         self.channel.start_consuming()
@@ -51,3 +61,15 @@ class QueueConnector:
             properties=pika.BasicProperties(delivery_mode=2)  # to ensure message persist
         )
         logger.debug(f"Message sent to queue {queue_name}: {message}")
+
+    def nack(self, delivery_tag: int):
+        """
+        Sending nack about message to the queue to send it to retry dead letter queue
+        """
+        self.channel.basic_ack(delivery_tag)
+
+    def ack(self, delivery_tag: int):
+        """
+        Acknowledge in case message is proceeded successfully
+        """
+        self.channel.basic_ack(delivery_tag)

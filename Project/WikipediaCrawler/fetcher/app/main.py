@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
+from pika.spec import Basic, BasicProperties
 
 from db_api import MongoConnector
 from logger_config import logger
@@ -66,20 +67,23 @@ class Fetcher:
 
         return None
 
-    def process_message(self, channel, method, properties, body):
+    def process_message(self, channel, method: Basic.Deliver, properties: BasicProperties, body):
         """
         Processes a message by fetching HTML from the URL, saving it locally,
         extracting links from the HTML content, and publishing them to the out_queue.
         """
+        delivery_tag = method.delivery_tag
         url = body.decode()
         logger.debug(f"Fetching HTML from {url}")
 
         if not url:
-            return
+            pass
 
         html_content, html_headers = self.fetch_html(url)
         if not html_content:
             logger.error(f"Failed to fetch HTML from {url}")
+            # send to retry queue with delay
+            self.queue_connector.nack(delivery_tag)
             return
         # save html to localhost
         page_file_path = self.save_html_to_local(url, html_content)
@@ -89,6 +93,8 @@ class Fetcher:
         self.mongo_connector.save_url_to_db(url, page_file_path, last_modified_date)
         # find links
         links = self.find_html_links(url, html_content)
+        # acknowledge queue
+        self.queue_connector.ack(delivery_tag)
         # add to next message queues
         for link in links:
             self.queue_connector.publish(link, os.getenv("OUT_QUEUE"))
@@ -114,7 +120,7 @@ class Fetcher:
 
     def close(self):
         """
-        Clean up resources
+        Clean up resources.
         """
         logger.info("Closing resources...")
         self.mongo_connector.close()
