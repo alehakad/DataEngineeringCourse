@@ -86,6 +86,11 @@ services:
       - IN_QUEUE=${PARSER_QUEUE}
       - OUT_QUEUE=${FILTER_QUEUE}
       - LOG_LEVEL=INFO
+    develop: # rebuild and restart container on changes
+      watch:
+        - action: sync+restart
+          path: ./parser/app
+          target: /app
     restart: on-failure
 
   filter:
@@ -102,6 +107,11 @@ services:
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - LOG_LEVEL=INFO
+    develop: # rebuild and restart container on changes
+      watch:
+        - action: sync+restart
+          path: ./filter/app
+          target: /app
     restart: on-failure
 
 volumes:

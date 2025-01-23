@@ -52,7 +52,7 @@ class Parser:
         """
         Starts the queue consumption.
         """
-        logger.debug("Start parser")
+        logger.info("Start parser")
         self.queue_connector.consume(os.getenv("IN_QUEUE"), self.process_message)
 
 

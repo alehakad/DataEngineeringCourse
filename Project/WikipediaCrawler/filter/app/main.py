@@ -31,7 +31,7 @@ class Filter:
         """
         Starts the queue consumption.
         """
-        logger.info("Start parser")
+        logger.info("Start filter")
         self.queue_connector.consume(os.getenv("IN_QUEUE"), self.process_message)
 
 
