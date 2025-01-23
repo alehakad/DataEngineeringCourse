@@ -24,6 +24,7 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
     ports:
       - "27017:27017"
+    command: --quiet # less logs
     volumes:
       - mongodb_data:/data/db
     healthcheck:
@@ -69,7 +70,9 @@ services:
         - action: sync+restart
           path: ./fetcher/app
           target: /app
-
+    deploy:
+      mode: replicated
+      replicas: ${FETCHER_REPLICAS}
     volumes:
       - ./html_pages:/app/html_pages
       # - ./fetcher/app:/app
