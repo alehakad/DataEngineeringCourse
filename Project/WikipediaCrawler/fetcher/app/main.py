@@ -26,7 +26,7 @@ class Fetcher:
         logger.info(f"Published start url")
 
     @staticmethod
-    def fetch_html(url: str):
+    def fetch_html(url: str) -> tuple[str, dict] | tuple[None, None]:
         """
         Fetches the HTML content of a given URL.
         """
@@ -37,7 +37,7 @@ class Fetcher:
             return None, None
 
     @staticmethod
-    def save_html_to_local(url, html_content):
+    def save_html_to_local(url: str, html_content: str):
         """
         Saves the fetched HTML content to a local file.
         """
@@ -50,7 +50,7 @@ class Fetcher:
         return file_path
 
     @staticmethod
-    def find_last_modified_date(html_headers):
+    def find_last_modified_date(html_headers: dict) -> datetime | None:
         """
         Finds the last modified date from the HTTP headers of the given URL.
         """
@@ -94,7 +94,7 @@ class Fetcher:
             self.queue_connector.publish(link, os.getenv("OUT_QUEUE"))
 
     @staticmethod
-    def find_html_links(start_url, html_content) -> List[str]:
+    def find_html_links(start_url: str, html_content: str) -> List[str]:
         """
         Extracts all the hyperlinks from the HTML content.
         """

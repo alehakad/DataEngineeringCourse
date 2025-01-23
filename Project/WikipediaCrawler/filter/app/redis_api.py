@@ -15,7 +15,7 @@ class RedisURLHandler:
         self.redis_client = redis.StrictRedis(host=os.getenv("REDIS_HOST", "localhost"),
                                               port=os.getenv("REDIS_PORT", "localhost"), decode_responses=True)
 
-    def add_url_if_not_exists(self, url):
+    def add_url_if_not_exists(self, url: str):
         """
         Check if a URL exists in a Redis set, and add it if it doesn't.
         """

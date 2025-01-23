@@ -11,7 +11,7 @@ class Filter:
         self.queue_connector = QueueConnector()
         self.redis_connector = RedisURLHandler()
 
-    def check_duplicate(self, url):
+    def check_duplicate(self, url: str):
         """
         Checks if a given URL was already handled - exists in redis.
         """

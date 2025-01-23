@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
@@ -26,7 +27,7 @@ class MongoConnector:
             print(f"Failed to connect to MongoDB: {e}")
             raise
 
-    def save_url_to_db(self, url, page_file_path, last_modified_date):
+    def save_url_to_db(self, url: str, page_file_path: str, last_modified_date: datetime):
         """
         Saves the fetched url to a MongoDB database.
         """

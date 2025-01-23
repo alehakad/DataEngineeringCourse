@@ -11,7 +11,7 @@ class Parser:
         self.queue_connector = QueueConnector()
 
     @staticmethod
-    def parse_wikipedia_link(url):
+    def parse_wikipedia_link(url: str):
         """
         Checks if a given URL is a Wikipedia link and normalizes it.
         """
