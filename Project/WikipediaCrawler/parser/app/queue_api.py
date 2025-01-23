@@ -29,8 +29,6 @@ class QueueConnector:
         Starts consuming messages from the specified queue and processes them
         using the provided callback function.
         """
-        logger.info(f"Declare queue {queue_name}")
-        self.channel.queue_declare(queue=queue_name, durable=True)
 
         self.channel.basic_consume(
             queue=queue_name,
@@ -44,8 +42,6 @@ class QueueConnector:
         """
         Publishes a message to the specified queue.
         """
-        logger.info(f"Declare queue {queue_name}")
-        self.channel.queue_declare(queue=queue_name, durable=True)
         self.channel.basic_publish(
             exchange="",
             routing_key=queue_name,

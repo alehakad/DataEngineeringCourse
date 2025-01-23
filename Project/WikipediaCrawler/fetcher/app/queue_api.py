@@ -42,8 +42,6 @@ class QueueConnector:
         """
         Publishes a message to the specified queue.
         """
-        logger.info(f"Declare queue {queue_name} in publish")
-        self.channel.queue_declare(queue=queue_name, durable=True)
         self.channel.basic_publish(
             exchange="",
             routing_key=queue_name,
