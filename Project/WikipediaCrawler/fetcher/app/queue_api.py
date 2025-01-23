@@ -24,49 +24,39 @@ class QueueConnector:
         )
         self.channel = self.connection.channel()
 
-    def consume(self, queue_name: str, process_message_callback: Callable, dead_letter_queue: str | None = None):
+    def consume(self, queue_name: str, process_message_callback: Callable, auto_ack: bool = True):
         """
         Starts consuming messages from the specified queue and processes them
         using the provided callback function.
         """
-        if not dead_letter_queue:
-            self.channel.queue_declare(queue=queue_name, durable=True)
-        else:
-            # set up dead letter queue to retry failed messages
-            self.channel.queue_declare(queue=queue_name, durable=True,
-                                       arguments={'x-dead-letter-exchange': '',
-                                                  'x-dead-letter-routing-key': dead_letter_queue,
-                                                  })
-            # declare dead message queue to send back to urls queue
-            self.channel.queue_declare(queue=dead_letter_queue, durable=True, arguments={'x-message-ttl': 5000,
-                                                                                         'x-dead-letter-exchange': '',
-                                                                                         'x-dead-letter-routing-key': queue_name})
+
         self.channel.basic_consume(
             queue=queue_name,
             on_message_callback=process_message_callback,
-            auto_ack=False,
+            auto_ack=auto_ack,
         )
         logger.debug("Waiting for messages. To exit press CTRL+C")
         self.channel.start_consuming()
 
-    def publish(self, message: str | bytes, queue_name: str):
+    def publish(self, message: str | bytes, queue_name: str, headers: dict | None = None):
         """
         Publishes a message to the specified queue.
         """
+        logger.info(f"Declare queue {queue_name} in publish")
         self.channel.queue_declare(queue=queue_name, durable=True)
         self.channel.basic_publish(
             exchange="",
             routing_key=queue_name,
             body=message,
-            properties=pika.BasicProperties(delivery_mode=2)  # to ensure message persist
+            properties=pika.BasicProperties(headers=headers, delivery_mode=2)  # to ensure message persist
         )
-        logger.debug(f"Message sent to queue {queue_name}: {message}")
+        logger.debug(f"Message sent to queue {queue_name}: {message} with headers {headers}")
 
-    def nack(self, delivery_tag: int):
+    def nack(self, delivery_tag: int, requeue: bool):
         """
         Sending nack about message to the queue to send it to retry dead letter queue
         """
-        self.channel.basic_ack(delivery_tag)
+        self.channel.basic_nack(delivery_tag, requeue=requeue)
 
     def ack(self, delivery_tag: int):
         """
