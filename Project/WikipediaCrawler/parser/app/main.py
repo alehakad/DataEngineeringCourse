@@ -6,9 +6,11 @@ from queue_api import QueueConnector
 
 
 class Parser:
+    out_queue = os.getenv("OUT_QUEUE", "check_dups_links")
+    in_queue = os.getenv("IN_QUEUE", "to_check_links")
 
-    def __init__(self):
-        self.queue_connector = QueueConnector()
+    def __init__(self, queue_connector: QueueConnector):
+        self.queue_connector = queue_connector
 
     @staticmethod
     def parse_wikipedia_link(url: str):
@@ -34,7 +36,7 @@ class Parser:
             else:
                 return None  # Not a Wikipedia link
         except Exception as e:
-            print(f"Error processing URL: {e}")
+            logger.error(f"Error processing URL: {e}")
             return None
 
     def process_message(self, channel, method, properties, body):
@@ -46,16 +48,17 @@ class Parser:
         normalized_link = self.parse_wikipedia_link(url)
         if normalized_link:
             logger.debug(f"Added link {normalized_link} to filter queue")
-            self.queue_connector.publish(normalized_link, os.getenv("OUT_QUEUE"))
+            self.queue_connector.publish(normalized_link, Parser.out_queue)
 
     def start(self):
         """
         Starts the queue consumption.
         """
         logger.info("Start parser")
-        self.queue_connector.consume(os.getenv("IN_QUEUE"), self.process_message)
+        self.queue_connector.consume(Parser.in_queue, self.process_message)
 
 
 if __name__ == "__main__":
-    parser = Parser()
+    queue_handler = QueueConnector()
+    parser = Parser(queue_handler)
     parser.start()

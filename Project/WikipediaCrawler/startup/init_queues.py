@@ -34,7 +34,6 @@ def setup_rabbitmq():
         routing_key="valid_links",
         body=start_url,
         properties=pika.BasicProperties(delivery_mode=2)  # Persistent message
-
     )
 
     print(f"Initialized RabbitMQ with initial URL: {start_url}")

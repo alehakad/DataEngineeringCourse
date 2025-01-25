@@ -14,12 +14,13 @@ from queue_api import QueueConnector
 
 class Fetcher:
     html_storage_path = "/app/html_pages"
-    out_queue = os.getenv("OUT_QUEUE")
+    out_queue = os.getenv("OUT_QUEUE", "to_check_links")
+    in_queue = os.getenv("IN_QUEUE", "valid_links")
 
-    def __init__(self):
+    def __init__(self, queue_connector: QueueConnector, mongo_connector: MongoConnector):
         logger.info(f"Connect to queue")
-        self.queue_connector = QueueConnector()
-        self.mongo_connector = MongoConnector()
+        self.queue_connector = queue_connector
+        self.mongo_connector = mongo_connector
         os.makedirs(Fetcher.html_storage_path, exist_ok=True)
 
     @staticmethod
@@ -27,10 +28,12 @@ class Fetcher:
         """
         Fetches the HTML content of a given URL.
         """
-        response = requests.get(url)
-        if response.status_code == 200:
+        try:
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
             return response.text, response.headers
-        else:
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to fetch {url}: {e}")
             return None, None
 
     @staticmethod
@@ -51,17 +54,16 @@ class Fetcher:
         """
         Finds the last modified date from the HTTP headers of the given URL.
         """
-        if 'Last-Modified' in html_headers:
-            last_modified_str = html_headers['Last-Modified']
-            try:
-                # Parse the Last-Modified header
-                return datetime.strptime(last_modified_str, "%a, %d %b %Y %H:%M:%S %Z")
-            except ValueError as e:
-                logger.error(f"Error parsing Last-Modified header: {e}")
-        else:
+        last_modified_str = html_headers.get('Last-Modified')
+        if not last_modified_str:
             logger.warning("Last-Modified header not found in the response.")
+            return None
 
-        return None
+        try:
+            return datetime.strptime(last_modified_str, "%a, %d %b %Y %H:%M:%S %Z")
+        except ValueError as e:
+            logger.error(f"Error parsing Last-Modified header: {e}")
+            return None
 
     def process_message(self, channel, method: Basic.Deliver, properties: BasicProperties, body):
         """
@@ -106,10 +108,7 @@ class Fetcher:
         Extracts all the hyperlinks from the HTML content.
         """
         html_soup = BeautifulSoup(html_content, "html.parser")
-        links = set()
-        for a_tag in html_soup.find_all("a", href=True):
-            href = a_tag['href']
-            links.add(urljoin(start_url, href))
+        links = {urljoin(start_url, a_tag['href']) for a_tag in html_soup.find_all("a", href=True)}
         return list(links)
 
     def start(self):
@@ -117,7 +116,7 @@ class Fetcher:
         Starts the queue consumption.
         """
         logger.info("Starting new fetcher")
-        self.queue_connector.consume(os.getenv("IN_QUEUE"), self.process_message, False)
+        self.queue_connector.consume(Fetcher.in_queue, self.process_message, False)
 
     def close(self):
         """
@@ -128,10 +127,11 @@ class Fetcher:
 
 
 if __name__ == "__main__":
-    fetcher = Fetcher()
+    queue_handler = QueueConnector()
+    mongo_handler = MongoConnector()
+    fetcher = Fetcher(queue_handler, mongo_handler)
     try:
         fetcher.start()
-
     except KeyboardInterrupt:
         logger.info("Interrupted. Shutting down")
     finally:
