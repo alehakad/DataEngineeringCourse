@@ -22,9 +22,9 @@ class MongoConnector:
         try:
             self.client = MongoClient(self.mongo_url)
             self.db = self.client[self.db_name]
-            logger.error("MongoDB connection established.")
+            logger.debug("MongoDB connection established.")
         except ConnectionFailure as e:
-            print(f"Failed to connect to MongoDB: {e}")
+            logger.error(f"Failed to connect to MongoDB: {e}")
             raise
 
     def save_url_to_db(self, url: str, page_file_path: str, last_modified_date: datetime):

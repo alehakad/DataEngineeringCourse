@@ -23,7 +23,7 @@ class Filter:
         """
         url = body.decode()
         logger.debug(f"Checking duplicate url for {url}")
-        if not self.check_duplicate(url):
+        if self.check_duplicate(url):
             logger.debug(f"Added link {url} to fetcher queue")
             self.queue_connector.publish(url, os.getenv("OUT_QUEUE"))
 

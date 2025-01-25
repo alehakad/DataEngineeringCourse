@@ -29,7 +29,6 @@ def setup_rabbitmq():
     channel.queue_declare(queue=os.getenv("FILTER_QUEUE"), durable=True)
 
     # Add the initial URL to the valid_links queue
-    initial_url = "http://example.com"
     channel.basic_publish(
         exchange="",
         routing_key="valid_links",
@@ -38,7 +37,7 @@ def setup_rabbitmq():
 
     )
 
-    print(f"Initialized RabbitMQ with initial URL: {initial_url}")
+    print(f"Initialized RabbitMQ with initial URL: {start_url}")
 
     # Close the connection
     connection.close()
