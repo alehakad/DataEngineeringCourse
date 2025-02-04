@@ -1,5 +1,4 @@
 -- Do students tend to get higher or lower grades over the course of their studies --
-
 -- 1) Find absolute dates of assessments per student per course --
 WITH student_time_marks AS (
     SELECT 
