@@ -116,14 +116,16 @@ def transform_data(**kwargs):
     genres_age_distribution = calculate_genres_age_distribution(
         users_df, songs_df, streams_df
     )
-    transformed_data["genres_age_distribution"] = genres_age_distribution.to_dict()
+    transformed_data["age_genres_distribution"] = genres_age_distribution.to_csv(
+        index=False
+    )
 
     # Calculate the distribution of hours listened by country
     country_hours_distribution = calculate_country_hours_distribution(
         songs_df, users_df, streams_df
     )
-    transformed_data["country_hours_distribution"] = (
-        country_hours_distribution.to_dict()
+    transformed_data["country_hours_distribution"] = country_hours_distribution.to_csv(
+        index=False
     )
 
     return transformed_data
@@ -150,7 +152,8 @@ def load_csv_to_redshift(**kwargs):
 
     for table, records in transformed_data.items():
         if records:
-            formatted_records = [tuple(row.values()) for row in records]
+            df = pd.read_csv(StringIO(records))
+            formatted_records = [tuple(row) for row in df.values]
             redshift_hook.insert_rows(
                 table=table,
                 rows=formatted_records,
