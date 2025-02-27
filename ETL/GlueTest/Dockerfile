@@ -12,7 +12,7 @@ ENV PYSPARK_PYTHON=python3
 ENV PYSPARK_DRIVER_PYTHON=python3
 
 # Default command to run the PySpark job
-CMD ["spark-submit", "/home/glue_user/workspace/glue-pyspark.py"]
+#CMD ["spark-submit", "/home/glue_user/workspace/glue-pyspark.py"]
 
 # To run:
 #sudo docker run -it --rm \

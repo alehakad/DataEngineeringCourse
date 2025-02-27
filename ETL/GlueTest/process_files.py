@@ -5,11 +5,9 @@ from pyspark.context import SparkContext
 from pyspark.sql import functions as F
 from pyspark.sql.functions import col
 
-# Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize Spark & Glue
 sc = SparkContext()
 glueContext = GlueContext(sc)
 spark = glueContext.spark_session
@@ -34,23 +32,6 @@ def read_csv_files():
         raise e
 
     return users_df, songs_df, streams_df
-
-
-# def read_csv_files():
-#     # to read local files
-#     logger.info("Reading CSV files...")
-#     csv_files_path = "/home/glue_user/data/csv"
-#
-#     try:
-#         users_df = spark.read.csv(f"{csv_files_path}/users.csv", header=True, inferSchema=True)
-#         songs_df = spark.read.csv(f"{csv_files_path}/songs.csv", header=True, inferSchema=True)
-#         streams_df = spark.read.csv(f"{csv_files_path}/streams1.csv", header=True, inferSchema=True)
-#         logger.info("Successfully read CSV files.")
-#     except Exception as e:
-#         logger.error(f"Error reading CSV files: {e}")
-#         raise e
-#
-#     return users_df, songs_df, streams_df
 
 
 def validate_songs_df(songs_df):
@@ -198,7 +179,7 @@ def write_to_s3(processed_df, filename):
     s3_output_file = f"s3://{BUCKET_NAME}/{PROCESSED_DATA_FOLDER}"
 
     try:
-        processed_df.write.mode("overwrite").csv(f"{s3_output_file}/{filename}")
+        processed_df.write.mode("overwrite").option("header", "true").csv(f"{s3_output_file}/{filename}")
         logger.info(f"Successfully wrote {filename} to S3.")
     except Exception as e:
         logger.error(f"Error writing {filename} to S3: {e}")
